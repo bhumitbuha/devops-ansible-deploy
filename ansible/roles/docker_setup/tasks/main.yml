@@ -22,7 +22,8 @@
 
 - name: Prune dangling Docker images (cleanup)
   command: docker image prune -f
-  changed_when: true
+  register: prune_result
+  changed_when: "'Total reclaimed space: 0B' not in prune_result.stdout"
   ignore_errors: true
 
 - name: Docker setup complete

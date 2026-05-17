@@ -25,6 +25,12 @@
         state: absent
       ignore_errors: true
 
+    - name: Verify rollback image exists locally
+      command: docker image inspect "{{ docker_image_name }}:{{ rollback_version }}"
+      register: image_check
+      changed_when: false
+      failed_when: image_check.rc != 0
+
     - name: Deploy rollback version
       community.docker.docker_container:
         name: "{{ app_name }}-{{ target_env }}"

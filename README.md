@@ -56,6 +56,16 @@ devops-ansible-deploy/
 
 ---
 
+## Related Project
+
+This pipeline is designed as the **Deploy** stage companion to the Jenkins CI pipeline:
+
+- **[ps-deployment-toolkit-jenkins](https://github.com/bhumitbuha/ps-deployment-toolkit-jenkins)** — Groovy Jenkinsfile pipeline that handles build, parallel testing, and artifact packaging. Its Deploy stage triggers this Ansible playbook.
+
+Together they form a complete CI/CD pipeline: Jenkins builds and tests; Ansible deploys, validates, and can roll back.
+
+---
+
 ## Prerequisites
 
 ### Docker Desktop

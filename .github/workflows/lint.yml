@@ -1,0 +1,50 @@
+name: Ansible Lint
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ansible-lint
+        run: pip install ansible-lint
+
+      - name: Install community.docker collection
+        run: ansible-galaxy collection install community.docker
+
+      - name: Run ansible-lint on deploy playbook
+        run: ansible-lint ansible/deploy.yml
+
+      - name: Run ansible-lint on rollback playbook
+        run: ansible-lint ansible/rollback.yml
+
+      - name: Validate YAML syntax on all playbooks
+        run: |
+          python -c "
+          import yaml, glob, sys
+          files = glob.glob('ansible/**/*.yml', recursive=True)
+          errors = []
+          for f in files:
+              try:
+                  yaml.safe_load(open(f))
+                  print(f'  OK: {f}')
+              except yaml.YAMLError as e:
+                  errors.append(f'  FAIL: {f} -- {e}')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print(f'\nAll {len(files)} YAML files valid.')
+          "
