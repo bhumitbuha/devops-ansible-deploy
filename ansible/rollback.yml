@@ -1,0 +1,56 @@
+---
+- name: "Rollback application"
+  hosts: local
+  gather_facts: false
+  become: false
+
+  vars:
+    target_env: "{{ env | default('dev') }}"
+    rollback_version: "{{ version | default('1.0.0') }}"
+
+  tasks:
+    - name: Display rollback parameters
+      debug:
+        msg: "Rolling back {{ app_name }} to version {{ rollback_version }} in {{ target_env }}"
+
+    - name: Stop current container
+      community.docker.docker_container:
+        name: "{{ app_name }}-{{ target_env }}"
+        state: stopped
+      ignore_errors: true
+
+    - name: Remove current container
+      community.docker.docker_container:
+        name: "{{ app_name }}-{{ target_env }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Deploy rollback version
+      community.docker.docker_container:
+        name: "{{ app_name }}-{{ target_env }}"
+        image: "{{ docker_image_name }}:{{ rollback_version }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ app_port }}:5000"
+        env:
+          APP_VERSION: "{{ rollback_version }}"
+          APP_ENV: "{{ target_env }}"
+
+    - name: Wait for rollback to stabilize
+      pause:
+        seconds: 5
+
+    - name: Verify rollback health
+      uri:
+        url: "{{ health_check_url }}"
+        method: GET
+        status_code: 200
+      register: rollback_health
+      retries: 3
+      delay: 5
+      until: rollback_health.status == 200
+
+    - name: Rollback complete
+      debug:
+        msg: "ROLLBACK COMPLETE — Running version: {{ rollback_version }}"

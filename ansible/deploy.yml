@@ -1,0 +1,43 @@
+---
+- name: "Deploy application"
+  hosts: local
+  gather_facts: true
+  become: false
+
+  vars:
+    target_env: "{{ env | default('dev') }}"
+
+  pre_tasks:
+    - name: Display deployment parameters
+      debug:
+        msg:
+          - "======================================"
+          - "  DEPLOYMENT STARTING"
+          - "======================================"
+          - "  Application : {{ app_name }}"
+          - "  Version     : {{ app_version }}"
+          - "  Environment : {{ target_env }}"
+          - "  Timestamp   : {{ ansible_date_time.iso8601 }}"
+          - "======================================"
+
+    - name: Ensure artifacts directory exists
+      shell: mkdir -p "{{ project_root }}/artifacts"
+      args:
+        creates: "{{ project_root }}/artifacts"
+
+  roles:
+    - role: docker_setup
+    - role: app_deploy
+    - role: health_check
+
+  post_tasks:
+    - name: Deployment summary
+      debug:
+        msg:
+          - "======================================"
+          - "  DEPLOYMENT COMPLETE"
+          - "  Status  : SUCCESS"
+          - "  App     : {{ app_name }}:{{ app_version }}"
+          - "  Env     : {{ target_env }}"
+          - "  URL     : http://localhost:{{ app_port }}"
+          - "======================================"

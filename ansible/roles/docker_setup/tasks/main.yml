@@ -1,0 +1,30 @@
+---
+- name: Verify Docker daemon is running
+  command: docker info
+  register: docker_info
+  changed_when: false
+  failed_when: docker_info.rc != 0
+
+- name: Display Docker version
+  command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Show Docker version
+  debug:
+    msg: "Docker version: {{ docker_version.stdout }}"
+
+- name: Ensure Docker network exists
+  community.docker.docker_network:
+    name: "{{ docker_network }}"
+    state: present
+  ignore_errors: true
+
+- name: Prune dangling Docker images (cleanup)
+  command: docker image prune -f
+  changed_when: true
+  ignore_errors: true
+
+- name: Docker setup complete
+  debug:
+    msg: "Docker environment verified and ready"

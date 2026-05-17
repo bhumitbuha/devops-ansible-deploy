@@ -1,0 +1,49 @@
+---
+- name: "Health check: waiting for app to be ready"
+  uri:
+    url: "{{ health_check_url }}"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: health_response
+  retries: "{{ health_check_retries }}"
+  delay: "{{ health_check_delay }}"
+  until: health_response.status == 200
+
+- name: Display health check response
+  debug:
+    msg: "Health check PASSED — Response: {{ health_response.json }}"
+
+- name: Validate version in health response
+  assert:
+    that:
+      - health_response.json.status == "ok"
+      - health_response.json.version == app_version
+    fail_msg: "Health check FAILED — version mismatch or status not ok"
+    success_msg: "Version {{ app_version }} confirmed healthy in {{ target_env }}"
+
+- name: Fetch metrics endpoint
+  uri:
+    url: "http://localhost:{{ app_port }}/metrics"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: metrics_response
+  ignore_errors: true
+
+- name: Display metrics
+  debug:
+    msg: "Metrics: {{ metrics_response.json }}"
+  when: metrics_response is defined and metrics_response.status == 200
+
+- name: Record deployment success
+  shell: |
+    cat > "{{ project_root }}/artifacts/deploy-record-{{ target_env }}.txt" << 'EOF'
+    DEPLOYMENT RECORD
+    =================
+    Timestamp: {{ ansible_date_time.iso8601 }}
+    Environment: {{ target_env }}
+    Version: {{ app_version }}
+    Health: PASSING
+    Container: {{ app_name }}-{{ target_env }}
+    EOF

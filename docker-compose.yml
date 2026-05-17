@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: devops-demo-app:dev
+    container_name: demo-app-dev
+    ports:
+      - "5000:5000"
+    environment:
+      - APP_VERSION=1.0.0
+      - APP_ENV=dev
+      - PORT=5000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app-network
+    volumes:
+      - app-logs:/var/log/app
+
+  redis:
+    image: redis:7-alpine
+    container_name: demo-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  app-logs:

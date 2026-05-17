@@ -1,0 +1,22 @@
+---
+# Application configuration
+app_name: devops-demo-app
+app_version: "1.0.0"
+app_port: 5000
+
+# Docker configuration
+docker_image_name: devops-demo-app
+docker_network: app-network
+
+# Deployment paths
+project_root: "{{ playbook_dir }}/.."
+app_dir: "{{ project_root }}/app"
+
+# Health check configuration
+health_check_url: "http://localhost:{{ app_port }}/health"
+health_check_retries: 5
+health_check_delay: 10
+
+# Environment settings
+target_env: "dev"
+compose_file: "{{ project_root }}/docker-compose.yml"
