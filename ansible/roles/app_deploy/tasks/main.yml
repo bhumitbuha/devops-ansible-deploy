@@ -1,5 +1,5 @@
 ---
-- name: "Build Docker image: {{ docker_image_name }}:{{ app_version }}"
+- name: Build Docker image
   community.docker.docker_image:
     build:
       path: "{{ app_dir }}"
@@ -8,10 +8,10 @@
     tag: "{{ app_version }}"
     source: build
     force_source: true
-  register: image_build_result
+  register: app_deploy_image_build_result
 
 - name: Display image build result
-  debug:
+  ansible.builtin.debug:
     msg: "Image built: {{ docker_image_name }}:{{ app_version }}"
 
 - name: Stop and remove existing container (idempotent)
@@ -19,9 +19,9 @@
     name: "{{ app_name }}-{{ target_env }}"
     state: absent
     force_kill: true
-  ignore_errors: true
+  failed_when: false
 
-- name: "Deploy container: {{ app_name }}-{{ target_env }}"
+- name: Deploy container
   community.docker.docker_container:
     name: "{{ app_name }}-{{ target_env }}"
     image: "{{ docker_image_name }}:{{ app_version }}"
@@ -37,12 +37,12 @@
       - name: "{{ docker_network }}"
     volumes:
       - app-logs:/var/log/app
-  register: container_result
+  register: app_deploy_container_result
 
 - name: Wait for container to initialize
-  pause:
+  ansible.builtin.pause:
     seconds: 5
 
 - name: Display container state
-  debug:
-    msg: "Container {{ container_result.container.Name }} is {{ container_result.container.State.Status }}"
+  ansible.builtin.debug:
+    msg: "Container {{ app_deploy_container_result.container.Name }} is {{ app_deploy_container_result.container.State.Status }}"

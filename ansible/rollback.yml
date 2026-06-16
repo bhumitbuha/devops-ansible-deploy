@@ -10,23 +10,23 @@
 
   tasks:
     - name: Display rollback parameters
-      debug:
+      ansible.builtin.debug:
         msg: "Rolling back {{ app_name }} to version {{ rollback_version }} in {{ target_env }}"
 
     - name: Stop current container
       community.docker.docker_container:
         name: "{{ app_name }}-{{ target_env }}"
         state: stopped
-      ignore_errors: true
+      failed_when: false
 
     - name: Remove current container
       community.docker.docker_container:
         name: "{{ app_name }}-{{ target_env }}"
         state: absent
-      ignore_errors: true
+      failed_when: false
 
     - name: Verify rollback image exists locally
-      command: docker image inspect "{{ docker_image_name }}:{{ rollback_version }}"
+      ansible.builtin.command: docker image inspect "{{ docker_image_name }}:{{ rollback_version }}"
       register: image_check
       changed_when: false
       failed_when: image_check.rc != 0
@@ -44,11 +44,11 @@
           APP_ENV: "{{ target_env }}"
 
     - name: Wait for rollback to stabilize
-      pause:
+      ansible.builtin.pause:
         seconds: 5
 
     - name: Verify rollback health
-      uri:
+      ansible.builtin.uri:
         url: "{{ health_check_url }}"
         method: GET
         status_code: 200
@@ -58,5 +58,5 @@
       until: rollback_health.status == 200
 
     - name: Rollback complete
-      debug:
+      ansible.builtin.debug:
         msg: "ROLLBACK COMPLETE — Running version: {{ rollback_version }}"

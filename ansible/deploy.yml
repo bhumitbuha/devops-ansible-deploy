@@ -9,7 +9,7 @@
 
   pre_tasks:
     - name: Display deployment parameters
-      debug:
+      ansible.builtin.debug:
         msg:
           - "======================================"
           - "  DEPLOYMENT STARTING"
@@ -21,9 +21,10 @@
           - "======================================"
 
     - name: Ensure artifacts directory exists
-      shell: mkdir -p "{{ project_root }}/artifacts"
-      args:
-        creates: "{{ project_root }}/artifacts"
+      ansible.builtin.file:
+        path: "{{ project_root }}/artifacts"
+        state: directory
+        mode: "0755"
 
   roles:
     - role: docker_setup
@@ -32,7 +33,7 @@
 
   post_tasks:
     - name: Deployment summary
-      debug:
+      ansible.builtin.debug:
         msg:
           - "======================================"
           - "  DEPLOYMENT COMPLETE"
