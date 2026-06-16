@@ -1,15 +1,15 @@
 # Containerized App Deployment with Docker and Ansible
 
-**Author:** Bhumit Buha  
-**Stack:** Python · Flask · Docker · Docker Compose · Ansible  
-**Runs on:** Local machine — no cloud account required  
-**Environments:** Dev (port 5000) · Staging (port 5001)
+**Author:** Bhumit Buha
+**Stack:** Python, Flask, Docker, Docker Compose, Ansible
+**Runs on:** Local machine. No cloud account required.
+**Environments:** Dev (port 5000), Staging (port 5001)
 
 ---
 
 ## What This Project Does
 
-This project is a fully automated deployment pipeline for a containerized Python Flask service. The application itself is intentionally minimal — the focus is entirely on the infrastructure and tooling around it.
+This is an automated deployment pipeline for a containerized Python Flask service. The app itself is intentionally minimal. The focus is on the infrastructure and tooling around it.
 
 The pipeline does the following without any manual steps:
 
@@ -18,9 +18,9 @@ The pipeline does the following without any manual steps:
 3. Stops any existing container and deploys a fresh one with the correct environment variables
 4. Hits the `/health` endpoint and asserts the version and status match expectations
 5. Writes a timestamped deployment record to an artifacts file
-6. Supports a separate rollback playbook that tears down the current container and rehydrates a prior image version
+6. Supports a separate rollback playbook that tears down the current container and brings back a prior image version
 
-Everything is driven by Ansible roles and variables — run the same playbook twice and it safely reaches the desired state without side effects. That is idempotency in practice.
+Everything is driven by Ansible roles and variables. Run the same playbook twice and it safely reaches the desired state without side effects. That is idempotency in practice.
 
 ---
 
@@ -70,7 +70,7 @@ Together they form a complete CI/CD pipeline: Jenkins builds and tests; Ansible 
 
 ### Docker Desktop
 
-Download and install from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).  
+Download and install from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
 Start Docker Desktop and wait for the engine to show as running before proceeding.
 
 Verify:
@@ -83,7 +83,7 @@ docker compose version
 
 Ansible runs natively on Linux and macOS. On Windows it runs inside WSL (Windows Subsystem for Linux).
 
-**Windows — install WSL first (run in PowerShell as Administrator):**
+**Windows. Install WSL first (run in PowerShell as Administrator):**
 ```powershell
 wsl --install
 ```
@@ -175,7 +175,7 @@ Staging runs on port 5001 with memory and CPU limits applied via the `docker-com
 ansible-playbook -i ansible/inventory/hosts.ini ansible/deploy.yml -e "env=dev" -vv
 ```
 
-The `-vv` flag shows the full module invocations and return values for each task — useful for understanding what Ansible is doing under the hood.
+The `-vv` flag shows the full module invocations and return values for each task. It is useful for seeing what Ansible is doing under the hood.
 
 ### Test Idempotency
 
@@ -186,7 +186,7 @@ ansible-playbook -i ansible/inventory/hosts.ini ansible/deploy.yml -e "env=dev"
 ansible-playbook -i ansible/inventory/hosts.ini ansible/deploy.yml -e "env=dev"
 ```
 
-On the second run, tasks that find the system already in the desired state report `ok` instead of `changed`. No containers are unnecessarily restarted. This is idempotency — a core principle of Ansible configuration management.
+On the second run, tasks that find the system already in the desired state report `ok` instead of `changed`. No containers are unnecessarily restarted. That is idempotency, a core principle of Ansible configuration management.
 
 ### Rollback to a Prior Version
 
@@ -247,7 +247,7 @@ Runs first. Checks that the Docker daemon is reachable, prints the Docker versio
 
 ### `app_deploy`
 
-Builds the Docker image from `app/Dockerfile` using `force_source: true` so a fresh image is always produced. Removes the existing container if one is running (idempotent — no error if it doesn't exist), then starts a new container with the correct port mapping, environment variables, and network attachment.
+Builds the Docker image from `app/Dockerfile` using `force_source: true` so a fresh image is always produced. Removes the existing container if one is running (this is idempotent and does not error if it does not exist), then starts a new container with the correct port mapping, environment variables, and network attachment.
 
 ### `health_check`
 
@@ -255,14 +255,14 @@ Polls `http://localhost:5000/health` with configurable retries and delay until t
 
 ---
 
-## Dockerfile — Multi-Stage Build
+## Dockerfile (Multi-Stage Build)
 
 The Dockerfile uses a two-stage build to keep the final image lean:
 
-- **Stage 1 (builder):** Uses `python:3.11-slim`, installs all pip dependencies into the standard site-packages location
-- **Stage 2 (runtime):** Starts from a fresh `python:3.11-slim`, copies only the installed packages and the gunicorn executable from the builder — no build tools, no pip cache
-- Runs as a non-root user (`appuser`) for security
-- Has a `HEALTHCHECK` instruction so Docker itself monitors the `/health` endpoint every 30 seconds
+- **Stage 1 (builder):** Uses `python:3.11-slim` and installs all pip dependencies into the standard site-packages location.
+- **Stage 2 (runtime):** Starts from a fresh `python:3.11-slim` and copies only the installed packages and the gunicorn executable from the builder. No build tools, no pip cache.
+- Runs as a non-root user (`appuser`) for security.
+- Has a `HEALTHCHECK` instruction so Docker itself monitors the `/health` endpoint every 30 seconds.
 
 ---
 
@@ -320,7 +320,7 @@ The container may need more time to start. Increase `health_check_delay` in `ans
 
 ## Author
 
-**Bhumit Buha**  
-Ottawa, ON  
-bhumitbuha2016@gmail.com  
+**Bhumit Buha**
+Ottawa, ON
+bhumitbuha2016@gmail.com
 [linkedin.com/in/buha0006](https://linkedin.com/in/buha0006)
